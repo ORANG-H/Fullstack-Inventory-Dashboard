@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Dashboard - Day 2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-6">
+
+  <div class="bg-slate-800 border border-slate-700 shadow-2xl rounded-2xl p-6 w-full max-w-md">
+    
+    <header class="mb-6 text-center">
+      <h1 class="text-2xl font-bold tracking-tight text-blue-400">Weather Dashboard</h1>
+      <p class="text-xs text-slate-400 mt-1">Day 2: Clean Search Vision</p>
+    </header>
+
+    <form id="weather-form" class="space-y-4">
+      <div>
+        <label for="location-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+          Enter Location
+        </label>
+        <input 
+          type="text" 
+          id="location-input" 
+          placeholder="e.g., Toronto, CA or London" 
+          class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+          required
+        >
+        <p class="text-[10px] text-slate-500 mt-1">Tip: Add a comma and 2-letter country code for better accuracy!</p>
+      </div>
+
+      <button 
+        type="submit" 
+        class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm py-2.5 px-4 rounded-lg shadow transition duration-200 active:scale-[0.98]">
+        Get Weather
+      </button>
+    </form>
+
+    <div id="weather-result" class="mt-6 pt-6 border-t border-slate-700 hidden">
+      <div class="text-center">
+        <h2 id="result-city" class="text-xl font-bold text-slate-100">City Name</h2>
+        <p id="result-desc" class="text-sm text-slate-400 capitalize">scattered clouds</p>
+        <div class="my-4 text-5xl font-extrabold text-blue-400" id="result-temp">--°C</div>
+        
+        <div class="grid grid-cols-2 gap-4 mt-4 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
+          <div>
+            <span class="block text-slate-500 font-medium">Feels Like</span>
+            <span id="result-feels" class="text-sm font-semibold text-slate-300">--°C</span>
+          </div>
+          <div>
+            <span class="block text-slate-500 font-medium">Humidity</span>
+            <span id="result-humidity" class="text-sm font-semibold text-slate-300">--%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const apiKey = '28a33a552870fd1459203011b27e33bb';
+    const weatherForm = document.getElementById('weather-form');
+    const locationInput = document.getElementById('location-input');
+    const weatherResultDiv = document.getElementById('weather-result');
+
+    weatherForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const searchLocation = locationInput.value.trim();
+      
+      // 1. Geocoding API Endpoint (Finds Coordinates)
+      const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(searchLocation)}&limit=1&appid=${apiKey}`;
+      
+      fetch(geoUrl)
+        .then(response => response.json())
+        .then(geoData => {
+          if (geoData.length === 0) {
+            alert('Location not found. Please try again.');
+            return;
+          }
+
+           const { lat, lon, name, country } = geoData[0];
+          
+           const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+          
+          // Fetch the actual weather data
+          return fetch(weatherUrl)
+            .then(res => res.json())
+            .then(weatherData => {
+              
+              // 3. Update the Tailwind UI with real data
+              document.getElementById('result-city').textContent = `${name}, ${country}`;
+              document.getElementById('result-desc').textContent = weatherData.weather[0].description;
+              document.getElementById('result-temp').textContent = `${Math.round(weatherData.main.temp)}°C`;
+              document.getElementById('result-feels').textContent = `${Math.round(weatherData.main.feels_like)}°C`;
+              document.getElementById('result-humidity').textContent = `${weatherData.main.humidity}%`;
+              
+               weatherResultDiv.classList.remove('hidden');
+            });
+        })
+        .catch(error => {
+          console.error('Error fetching weather lifecycle data:', error);
+          alert('An error occurred while communicating with OpenWeather.');
+        });
+    });
+  </script>
+</body>
+</html>
